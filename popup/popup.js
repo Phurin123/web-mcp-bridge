@@ -9,7 +9,7 @@ import { MAX_ACTIVE_SERVERS, RECOMMENDED_ACTIVE_SERVERS, PERMISSIONS, PERMISSION
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const STATUS_TEXT = {
-  connected: 'Conectado', connecting: 'Conectando…', disconnected: 'Sin conexión (reintentando)', error: 'Error de conexión',
+  connected: 'Connected', connecting: 'Connecting…', disconnected: 'Disconnected (retrying)', error: 'Connection error',
 };
 const DEMO_TOOL = 'info_sistema';
 
@@ -27,7 +27,7 @@ for (const el of document.querySelectorAll('.ico[data-ico]')) el.innerHTML = ICO
 async function api(type, payload = {}) {
   let res;
   try { res = await chrome.runtime.sendMessage({ type, ...payload }); } catch (err) { throw new Error(err.message); }
-  if (!res?.ok) throw new Error(res?.error ?? 'Error desconocido.');
+  if (!res?.ok) throw new Error(res?.error ?? 'Unknown error.');
   return res;
 }
 
@@ -75,48 +75,48 @@ function renderBridge(state) {
 
   if (!b.checked) {
     dot.className = 'dot connecting';
-    title.textContent = 'Comprobando el puente…';
+    title.textContent = 'Checking bridge…';
     sub.textContent = '';
   } else if (b.online) {
     dot.className = 'dot online';
-    title.textContent = 'Puente conectado';
+    title.textContent = 'Bridge connected';
     const listening = state.servers.filter((s) => s.bridgeStatus === 'listening').length;
-    sub.textContent = `v${b.version ?? '?'} · ${listening} servidor${listening === 1 ? '' : 'es'} publicado${listening === 1 ? '' : 's'}`;
+    sub.textContent = `v${b.version ?? '?'} · ${listening} server${listening === 1 ? '' : 's'} published`;
   } else {
     dot.className = 'dot offline';
-    title.textContent = 'Puente apagado';
-    sub.textContent = 'La extensión no lo encuentra en este equipo.';
+    title.textContent = 'Bridge offline';
+    sub.textContent = 'Not detected on this computer.';
   }
 
   cfgErr.hidden = !(b.online && b.configError);
-  if (!cfgErr.hidden) cfgErr.textContent = `servers.json tiene un error: ${b.configError}. Corrígelo y guarda: el puente lo recarga solo (mientras tanto sigue con la configuración anterior).`;
+  if (!cfgErr.hidden) cfgErr.textContent = `servers.json has an error: ${b.configError}. Fix and save: the bridge reloads automatically.`;
 
   hint.hidden = !(b.checked && !b.online);
   if (!hint.hidden) {
     if (b.launcherOnline) {
       hint.textContent = b.paused
-        ? 'El puente est\u00e1 apagado a prop\u00f3sito. Pulsa \u00abIniciar puente\u00bb para encenderlo.'
-        : 'El puente se ha ca\u00eddo; el lanzador lo est\u00e1 levantando. Si no vuelve, pulsa \u00abIniciar puente\u00bb.';
+        ? 'The bridge is paused. Click "Start bridge" to turn it on.'
+        : 'The bridge stopped; the launcher is restarting it. If it does not return, click "Start bridge".';
     } else {
-      hint.replaceChildren('Para encenderlo desde aqu\u00ed, instala el lanzador una vez: doble clic en ', Object.assign(document.createElement('code'), { textContent: 'server/install.cmd' }),
-        '. Mientras tanto puedes abrirlo a mano con ', Object.assign(document.createElement('code'), { textContent: 'server/start_bridge_loop.pyw' }), '.');
+      hint.replaceChildren('Start the bridge with ', Object.assign(document.createElement('code'), { textContent: 'Web-MCP-Bridge.cmd' }),
+        ' or install the background launcher once via ', Object.assign(document.createElement('code'), { textContent: 'server/install.cmd' }), '.');
     }
   }
 
   const toggle = $('#toggle-bridge');
   if (!togglingBridge) {
-    setLabel(toggle, b.online ? 'Apagar puente' : 'Iniciar puente');
+    setLabel(toggle, b.online ? 'Stop bridge' : 'Start bridge');
     toggle.disabled = !b.checked || !b.launcherOnline;
     toggle.title = b.launcherOnline
-      ? (b.online ? 'Apaga el puente (queda apagado hasta que lo inicies de nuevo)' : 'Enciende el puente')
-      : 'Necesita el lanzador: se instala una vez con server/install.cmd';
+      ? (b.online ? 'Stops the bridge until you start it again' : 'Starts the bridge')
+      : 'Requires the launcher (server/install.cmd)';
   }
 
   const restart = $('#restart-bridge');
   if (!restarting) {
     restart.disabled = !b.checked || (!b.online && !b.launcherOnline);
-    setLabel(restart, b.online ? 'Reiniciar puente' : 'Encender (reiniciar)');
-    restart.title = (!b.online && !b.launcherOnline) ? 'Necesita el lanzador: se instala una vez con server/install.cmd' : 'Cierra TODOS los puentes (de cualquier carpeta) y abre uno nuevo; si estaba apagado, lo enciende';
+    setLabel(restart, b.online ? 'Restart bridge' : 'Start (restart)');
+    restart.title = (!b.online && !b.launcherOnline) ? 'Requires the launcher (server/install.cmd)' : 'Restarts the bridge process';
   }
   $('#open-config').title = b.config ? `Abrir ${b.config}` : 'Abrir servers.json en tu editor';
 }
@@ -221,23 +221,23 @@ function buildCard(server) {
   const manual = document.createElement('span');
   manual.className = 'badge';
   manual.textContent = 'manual';
-  manual.title = 'Añadido a mano en versiones anteriores (no viene de servers.json)';
+  manual.title = 'Added manually in earlier versions (not from servers.json)';
   const demo = document.createElement('span');
   demo.className = 'badge demo';
   demo.textContent = 'demo';
-  demo.title = 'Servidor de prueba incluido con la extensión';
+  demo.title = 'Test server bundled with the extension';
   name.append(dot, title, manual, demo);
   const meta = document.createElement('div');
   meta.className = 'meta';
 
   const tools = document.createElement('div');
   tools.className = 'tools';
-  const select = permSelect((value) => api('SET_PERMISSION', { id: card.server.id, permission: value }), `Permiso de ${server.name}`);
+  const select = permSelect((value) => api('SET_PERMISSION', { id: card.server.id, permission: value }), `Permission for ${server.name}`);
   const test = document.createElement('button');
   test.type = 'button';
   test.className = 'test-btn';
-  test.innerHTML = `${ICONS.play}<span>Probar</span>`;
-  test.title = 'Ejecuta info_sistema: te muestra datos reales de tu equipo (lo activa si hace falta)';
+  test.innerHTML = `${ICONS.play}<span>Test</span>`;
+  test.title = 'Runs info_sistema: shows live info from your computer';
   test.addEventListener('click', () => runDemo(card));
   tools.append(select, test);
   info.append(name, meta, tools);
@@ -248,9 +248,9 @@ function buildCard(server) {
   remove.type = 'button';
   remove.className = 'icon-btn danger';
   remove.innerHTML = ICONS.trash;
-  remove.title = 'Quitar de la extensión';
-  remove.setAttribute('aria-label', 'Quitar de la extensión');
-  remove.dataset.armed = '¿Seguro?';
+  remove.title = 'Remove from extension';
+  remove.setAttribute('aria-label', 'Remove from extension');
+  remove.dataset.armed = 'Sure?';
   remove.addEventListener('click', () => {
     if (!remove.classList.contains('armed')) { // primer clic: pide confirmación en el propio botón
       remove.classList.add('armed');
@@ -273,10 +273,10 @@ function updateCard(card, server, activeCount) {
   const { li, els } = card;
   li.classList.toggle('on', server.enabled);
 
-  els.toggle.title = server.enabled ? 'Desactivar' : 'Activar';
+  els.toggle.title = server.enabled ? 'Disable' : 'Enable';
   els.checkbox.checked = server.enabled;
   els.checkbox.disabled = !server.enabled && activeCount >= MAX_ACTIVE_SERVERS;
-  els.checkbox.setAttribute('aria-label', `Activar ${server.name}`);
+  els.checkbox.setAttribute('aria-label', `Enable ${server.name}`);
 
   const bridgeBroken = server.bridgeStatus === 'error';
   els.dot.className = `dot ${bridgeBroken ? 'error' : (server.enabled ? server.status : '')}`;
@@ -287,10 +287,10 @@ function updateCard(card, server, activeCount) {
   els.remove.parentElement.hidden = Boolean(server.auto); // los de servers.json se quitan editando el archivo
 
   let meta;
-  if (bridgeBroken) meta = `${server.url} · El puente no pudo abrirlo: ${server.bridgeError ?? 'error'}`;
-  else if (server.permission === 'deny') meta = `${server.url} · Bloqueado (no se describe a la IA)`;
+  if (bridgeBroken) meta = `${server.url} · Bridge failed to start: ${server.bridgeError ?? 'error'}`;
+  else if (server.permission === 'deny') meta = `${server.url} · Blocked (hidden from AI)`;
   else if (server.enabled) {
-    meta = `${server.url} · ${STATUS_TEXT[server.status] ?? server.status}${server.status === 'connected' ? ` · ${server.toolCount} herramientas` : ''}`;
+    meta = `${server.url} · ${STATUS_TEXT[server.status] ?? server.status}${server.status === 'connected' ? ` · ${server.toolCount} tools` : ''}`;
   } else meta = server.url;
   els.meta.textContent = meta;
   els.meta.classList.toggle('err', bridgeBroken);
@@ -305,7 +305,7 @@ function updateCard(card, server, activeCount) {
     if (!els.out) {
       els.out = document.createElement('div');
       els.out.className = 'demo-out';
-      els.out.title = 'Clic para ocultar';
+      els.out.title = 'Click to hide';
       els.out.append(document.createElement('pre'));
       els.out.addEventListener('click', () => { demoOutputs.delete(card.server.id); updateCard(card, card.server, activeCount); });
       li.append(els.out);
@@ -326,9 +326,9 @@ async function runDemo(card) {
     if (!card.server.enabled) await api('TOGGLE_SERVER', { id: card.server.id, enabled: true });
     const res = await api('CALL_TOOL', { server: card.server.slug ?? card.server.name, name: DEMO_TOOL, arguments: {} });
     const text = (res.result?.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('\n').trim();
-    demoOutputs.set(card.server.id, { ok: !res.result?.isError, text: text || 'El servidor respondió sin texto.' });
+    demoOutputs.set(card.server.id, { ok: !res.result?.isError, text: text || 'Server responded with no text.' });
   } catch (err) {
-    const hint = /no existe|no está conectado/.test(err.message) ? '\nReinicia el puente para cargar la demo actualizada.' : '';
+    const hint = /no existe|not connected|no está conectado/i.test(err.message) ? '\nRestart the bridge to load the updated demo.' : '';
     demoOutputs.set(card.server.id, { ok: false, text: err.message + hint });
   } finally {
     btn.disabled = false;
@@ -340,13 +340,13 @@ function renderServers(state) {
   const list = $('#server-list');
   const active = state.servers.filter((s) => s.enabled);
 
-  $('#counter').textContent = `${active.length}/${MAX_ACTIVE_SERVERS} activos`;
+  $('#counter').textContent = `${active.length}/${MAX_ACTIVE_SERVERS} active`;
   const tokens = active.reduce((sum, s) => sum + s.approxTokens, 0);
-  $('#tokens').textContent = active.length ? `≈ ${tokens.toLocaleString('es')} tokens de herramientas` : '';
+  $('#tokens').textContent = active.length ? `≈ ${tokens.toLocaleString('en')} tool tokens` : '';
 
   const warning = $('#warning');
   warning.hidden = active.length <= RECOMMENDED_ACTIVE_SERVERS;
-  warning.textContent = `Tienes ${active.length} MCP activos. Cada herramienta ocupa contexto de la IA y puede saturarlo. Lo recomendable es 1 a la vez.`;
+  warning.textContent = `You have ${active.length} active MCPs. Each tool uses AI context and may saturate it. 1 at a time is recommended.`;
   $('#empty').hidden = state.servers.length > 0;
 
   const seen = new Set();
@@ -380,17 +380,17 @@ function renderGlobalPermission(servers) {
   select.dataset.perm = value;
   $('#perm-all').closest('.perm-all').hidden = servers.length === 0;
   $('#perm-hint').textContent = {
-    allow: 'Los tienes todos permitidos: no se pregunta nada.',
-    ask: 'Se pregunta en cada llamada de la IA.',
-    deny: 'Todos bloqueados: la IA no recibe ninguna herramienta.',
-    mixed: 'Cada MCP tiene un permiso distinto.',
+    allow: 'All MCPs allowed: no prompt will be shown.',
+    ask: 'Asks before each AI tool call.',
+    deny: 'All blocked: AI receives no tools.',
+    mixed: 'Each MCP has a different permission.',
   }[value];
 }
 $('#perm-all').addEventListener('change', guard((e) => api('SET_ALL_PERMISSIONS', { permission: e.target.value })));
 
-// ───────────────────────── Avisos ─────────────────────────
+// ───────────────────────── Notices ─────────────────────────
 
-const LEVEL_TEXT = { info: 'Novedad', update: 'Versión nueva', warning: 'Importante' };
+const LEVEL_TEXT = { info: 'News', update: 'New version', warning: 'Important' };
 let noticesSig = '';
 
 function renderNotices(state) {
@@ -416,7 +416,7 @@ function renderNotices(state) {
     title.textContent = n.title;
     const date = document.createElement('div');
     date.className = 'n-date';
-    date.textContent = [LEVEL_TEXT[n.level], n.date ? new Date(n.date).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : null].filter(Boolean).join(' · ');
+    date.textContent = [LEVEL_TEXT[n.level], n.date ? new Date(n.date).toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' }) : null].filter(Boolean).join(' · ');
     li.append(title, date);
     if (n.message) {
       const msg = document.createElement('div');
@@ -430,21 +430,21 @@ function renderNotices(state) {
       const open = document.createElement('button');
       open.type = 'button';
       open.className = 'primary small';
-      open.textContent = 'Ver en GitHub';
+      open.textContent = 'View on GitHub';
       open.addEventListener('click', guard(async () => { openLink(n.url); await api('READ_NOTICES', { ids: [n.id] }); }));
       actions.append(open);
     }
     const dismiss = document.createElement('button');
     dismiss.type = 'button';
     dismiss.className = 'soft small';
-    dismiss.textContent = 'Descartar';
+    dismiss.textContent = 'Dismiss';
     dismiss.addEventListener('click', guard(() => api('DISMISS_NOTICE', { id: n.id })));
     actions.append(dismiss);
     li.append(actions);
     list.append(li);
   }
 
-  const when = data.checkedAt ? `Revisado ${new Date(data.checkedAt).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })}` : 'Aún sin revisar';
+  const when = data.checkedAt ? `Checked ${new Date(data.checkedAt).toLocaleString('en', { dateStyle: 'short', timeStyle: 'short' })}` : 'Not checked yet';
   $('#notices-line').textContent = data.error ? `${data.error}` : when;
 }
 $('#read-all').addEventListener('click', guard(() => api('READ_NOTICES', { ids: 'all' })));
@@ -453,7 +453,7 @@ $('#check-notices').addEventListener('click', async (event) => {
   setBusy(btn, true);
   try {
     const res = await api('CHECK_NOTICES');
-    toast(res.count ? `Hay ${res.count} aviso${res.count === 1 ? '' : 's'} vigente${res.count === 1 ? '' : 's'}.` : 'No hay avisos nuevos.');
+    toast(res.count ? `${res.count} active notice${res.count === 1 ? '' : 's'}.` : 'No new notices.');
   } catch (err) { toast(err.message, 5000); }
   setBusy(btn, false);
   noticesSig = '';
@@ -483,7 +483,7 @@ async function renderHistory() {
     status.textContent = h.status === 'ok' ? `OK${h.ms ? ` · ${h.ms} ms` : ''}` : 'Error';
     row.append(title, status);
     const detail = document.createElement('small');
-    detail.textContent = `${new Date(h.ts).toLocaleTimeString('es')} · ${h.error ?? h.args}`;
+    detail.textContent = `${new Date(h.ts).toLocaleTimeString('en')} · ${h.error ?? h.args}`;
     li.append(row, detail);
     list.append(li);
   });
@@ -495,7 +495,7 @@ $('#clear-history').addEventListener('click', guard(async () => { await api('CLE
 function renderSettings(state) {
   const { settings } = state;
   $('#master').checked = settings.bridgeEnabled;
-  $('#master-label').textContent = settings.bridgeEnabled ? 'Activado' : 'Desactivado';
+  $('#master-label').textContent = settings.bridgeEnabled ? 'Enabled' : 'Disabled';
   $('#main').classList.toggle('off', !settings.bridgeEnabled);
   if (document.activeElement?.id !== 'set-maxResultChars') $('#set-maxResultChars').value = settings.maxResultChars;
   $('#set-autoInject').checked = settings.autoInject;
@@ -529,7 +529,7 @@ $('#set-responseDelaySec').addEventListener('change', guard((e) => {
 }));
 $('#discover-now').addEventListener('click', guard(async () => {
   const res = await api('DISCOVER', { reset: true });
-  toast(res.added ? `Detectados ${res.added} servidor(es) nuevo(s).` : 'Servidores al día.');
+  toast(res.added ? `Detected ${res.added} new server(s).` : 'Servers up to date.');
 }));
 $('#set-maxResultChars').addEventListener('change', guard((e) => {
   const value = Math.min(100000, Math.max(500, Number(e.target.value) || 12000));

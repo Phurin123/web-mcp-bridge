@@ -23,7 +23,7 @@ export const LEGACY_STORAGE_KEYS = ['wmb_update'];
 
 /** Permisos por MCP: allow = nunca pregunta · ask = pregunta en cada llamada · deny = bloqueado. */
 export const PERMISSIONS = ['allow', 'ask', 'deny'];
-export const PERMISSION_LABELS = { allow: 'Permitir siempre', ask: 'Preguntar siempre', deny: 'No permitir' };
+export const PERMISSION_LABELS = { allow: 'Allow always', ask: 'Ask every time', deny: "Don't allow" };
 
 export const DEFAULT_SETTINGS = {
   /** Interruptor general: si está en false no hay conexiones ni inyección. */

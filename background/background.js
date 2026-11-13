@@ -284,7 +284,7 @@ async function addHistory(entry) {
 
 async function callTool({ server, name, arguments: args }) {
   const { servers, settings } = await loadState();
-  if (!settings.bridgeEnabled) return { ok: false, error: 'El bridge está desactivado.' };
+  if (!settings.bridgeEnabled) return { ok: false, error: 'Bridge is disabled.' };
   const slugs = assignSlugs(servers);
   const active = servers.filter((s) => s.enabled && s.url);
   const target = server
@@ -298,12 +298,12 @@ async function callTool({ server, name, arguments: args }) {
     return { ok: false, error };
   };
 
-  if (!target) return fail(`El servidor «${label}» no está activo.`);
-  if (target.permission === 'deny') return fail(`El usuario no permite usar «${label}».`);
+  if (!target) return fail(`Server "${label}" is not active.`);
+  if (target.permission === 'deny') return fail(`User does not allow using "${label}".`);
   const conn = connections.get(target.id);
   if (conn && conn.status !== 'connected') conn.connect(); // sin esperar al backoff: reconecta ya
-  if (!conn || !(await conn.whenReady(10_000))) return fail(`El servidor «${label}» no está conectado.`);
-  if (!conn.tools.some((t) => t.name === name)) return fail(`La herramienta «${name}» no existe en «${label}».`);
+  if (!conn || !(await conn.whenReady(10_000))) return fail(`Server "${label}" is not connected.`);
+  if (!conn.tools.some((t) => t.name === name)) return fail(`Tool "${name}" does not exist in "${label}".`);
 
   const started = Date.now();
   try {
@@ -320,8 +320,8 @@ async function callTool({ server, name, arguments: args }) {
 
 function validateUrl(raw) {
   let url;
-  try { url = new URL(raw); } catch { throw new Error('La dirección no es válida.'); }
-  if (!['ws:', 'wss:'].includes(url.protocol)) throw new Error('La dirección debe empezar por ws:// o wss://');
+  try { url = new URL(raw); } catch { throw new Error('Invalid URL.'); }
+  if (!['ws:', 'wss:'].includes(url.protocol)) throw new Error('URL must start with ws:// or wss://');
   return url.toString().replace(/\/$/, '');
 }
 
@@ -337,7 +337,7 @@ const mutations = {
   ADD_SERVER: ({ name, url }) => mutate(async (servers, settings) => {
     const cleanUrl = validateUrl(String(url ?? '').trim());
     const cleanName = String(name ?? '').trim() || 'mcp';
-    if (servers.some((s) => s.url === cleanUrl)) throw new Error('Esa dirección ya está registrada.');
+    if (servers.some((s) => s.url === cleanUrl)) throw new Error('That URL is already registered.');
     // Por defecto solo hay 1 MCP activo: el primero que se registra.
     servers.push({
       id: crypto.randomUUID(), name: cleanName, url: cleanUrl, enabled: servers.every((s) => !s.enabled), permission: settings.defaultPermission,
@@ -347,16 +347,16 @@ const mutations = {
 
   /** Permiso de UN MCP: allow (siempre) · ask (preguntar) · deny (no permitir). */
   SET_PERMISSION: ({ id, permission }) => mutate(async (servers) => {
-    if (!PERMISSIONS.includes(permission)) throw new Error('Permiso no válido.');
+    if (!PERMISSIONS.includes(permission)) throw new Error('Invalid permission.');
     const server = servers.find((s) => s.id === id);
-    if (!server) throw new Error('Servidor no encontrado.');
+    if (!server) throw new Error('Server not found.');
     server.permission = permission;
     await saveServers(servers);
   }),
 
   /** Mismo selector para TODOS los MCP (y para los que se añadan después). */
   SET_ALL_PERMISSIONS: ({ permission }) => mutate(async (servers, settings) => {
-    if (!PERMISSIONS.includes(permission)) throw new Error('Permiso no válido.');
+    if (!PERMISSIONS.includes(permission)) throw new Error('Invalid permission.');
     servers.forEach((s) => { s.permission = permission; });
     await saveServers(servers);
     await chrome.storage.local.set({ [KEYS.settings]: { ...settings, defaultPermission: permission } });
@@ -405,7 +405,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, Math.min(Math
 
 async function focusTab(sender) {
   const tab = sender?.tab;
-  if (!tab?.id) return { ok: false, error: 'Sin pestaña.' };
+  if (!tab?.id) return { ok: false, error: 'No tab.' };
   const [previous] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   await chrome.tabs.update(tab.id, { active: true });
   await chrome.windows.update(tab.windowId, { focused: true });
@@ -431,7 +431,7 @@ function publicBridge() {
   return { ...rest, canControl: bridgeCanControl() };
 }
 
-const OLD_BRIDGE = 'Tu puente es de una version anterior y todavia no sabe hacerlo. Ciérralo y ábrelo UNA vez con server/restart_bridge.cmd; después este botón funcionará.';
+const OLD_BRIDGE = 'Your bridge is from an older version and does not support this yet. Close it and open it ONCE with server/restart_bridge.cmd; after that this button will work.';
 
 // ------------- Lanzador (v1.6.0): encender / apagar / reiniciar el puente desde el panel -------------
 // Una extension no puede lanzar procesos; lo hace server/start_bridge_loop.pyw (puerto 8098), que se instala una vez.
@@ -495,15 +495,15 @@ async function restartBridge() {
   const before = await probeBridge(true);
   if (before.launcherOnline) return controlBridge('restart'); // v1.7.0: siempre por el lanzador (cierra tambien puentes de OTRAS copias)
   if (!before.online) {
-    return { ok: false, error: 'El puente no está encendido, así que no hay nada que reiniciar desde aquí. Ábrelo con server/start_bridge_loop.pyw.' };
+    return { ok: false, error: 'The bridge is not running, so there is nothing to restart from here. Start it with Web-MCP-Bridge.cmd or server/start_bridge_loop.pyw.' };
   }
   if (!bridgeCanControl()) return { ok: false, error: OLD_BRIDGE };
   const oldPid = before.pid;
   try {
     const { status, body } = await bridgeFetch('/restart', { method: 'POST', timeout: 4000 });
-    if (status !== 200 || !body?.ok) return { ok: false, error: body?.error ?? 'El puente no aceptó el reinicio.' };
+    if (status !== 200 || !body?.ok) return { ok: false, error: body?.error ?? 'The bridge rejected the restart.' };
   } catch {
-    return { ok: false, error: 'No se pudo contactar con el puente.' };
+    return { ok: false, error: 'Could not reach the bridge.' };
   }
   // Espera a que vuelva con OTRO proceso (otro pid): así sabemos que arrancó de cero y no es el viejo cerrándose.
   const end = Date.now() + 30_000;
@@ -513,7 +513,7 @@ async function restartBridge() {
     const probe = await probeBridge(true);
     if (probe.online && probe.pid !== oldPid) { after = probe; break; }
   }
-  if (!after) return { ok: false, error: 'El puente no volvió a encenderse en 30 segundos. Revisa server/bridge.log o ábrelo con start_bridge_loop.pyw.' };
+  if (!after) return { ok: false, error: 'The bridge did not come back up within 30 seconds. Check server/bridge.log or start it with start_bridge_loop.pyw.' };
   for (const conn of connections.values()) conn.connect(); // reconecta ya, sin esperar al backoff
   await discoverServers(true).catch(() => {});
   scheduleBroadcast();
@@ -532,7 +532,7 @@ async function stopViaControlPort() {
     await delay(600);
     if (!(await probeBridge(true)).online) { scheduleBroadcast(); return { ok: true, stopped: true }; }
   }
-  return { ok: false, error: 'El puente no se apagó en 15 segundos.' };
+  return { ok: false, error: 'The bridge did not stop within 15 seconds.' };
 }
 
 /**
@@ -542,7 +542,7 @@ async function stopViaControlPort() {
  * Además el interruptor general de la extensión sigue al proceso (apagar = nada se conecta).
  */
 async function bridgeGlobal(action) {
-  if (!['start', 'stop', 'restart'].includes(action)) return { ok: false, error: 'Acción no válida.' };
+  if (!['start', 'stop', 'restart'].includes(action)) return { ok: false, error: 'Invalid action.' };
   await withLock(async () => {
     const { settings } = await loadState();
     await chrome.storage.local.set({ [KEYS.settings]: { ...settings, bridgeEnabled: action !== 'stop' } });
@@ -569,46 +569,46 @@ async function bridgeGlobal(action) {
   return res;
 }
 
-const OLD_BRIDGE_CONFIG = 'Tu puente es de una versión anterior a la 1.7.0 y no puede editar servers.json desde aquí. Reinícialo con «Reiniciar puente» (o con server/restart_bridge.cmd) y vuelve a intentarlo.';
+const OLD_BRIDGE_CONFIG = 'Your bridge is older than 1.7.0 and cannot edit servers.json from here. Restart it with "Restart bridge" (or server/restart_bridge.cmd) and try again.';
 
 /** Lee servers.json a través del puente (texto tal cual, para el editor). */
 async function getBridgeConfig() {
   const info = await probeBridge(true);
-  if (!info.online) return { ok: false, offline: true, error: 'El puente está apagado: enciéndelo para leer servers.json.' };
+  if (!info.online) return { ok: false, offline: true, error: 'Bridge is off: turn it on to read servers.json.' };
   try {
     const { status, body } = await bridgeFetch('/config', { timeout: 5000 });
     if (status === 404) return { ok: false, oldBridge: true, error: OLD_BRIDGE_CONFIG };
-    if (status !== 200 || !body?.ok) return { ok: false, error: body?.error ?? 'No se pudo leer servers.json.' };
+    if (status !== 200 || !body?.ok) return { ok: false, error: body?.error ?? 'Could not read servers.json.' };
     return { ok: true, ...body };
-  } catch { return { ok: false, error: 'No se pudo contactar con el puente.' }; }
+  } catch { return { ok: false, error: 'Could not reach the bridge.' }; }
 }
 
 /** Guarda servers.json: el puente valida, hace copia .bak, escribe y recarga los servidores. */
 async function saveBridgeConfig({ text }) {
-  if (typeof text !== 'string' || !text.trim()) return { ok: false, error: 'El contenido está vacío.' };
-  if (text.length > 1_000_000) return { ok: false, error: 'El archivo es demasiado grande.' };
+  if (typeof text !== 'string' || !text.trim()) return { ok: false, error: 'Content is empty.' };
+  if (text.length > 1_000_000) return { ok: false, error: 'File is too large.' };
   const info = await probeBridge(true);
-  if (!info.online) return { ok: false, offline: true, error: 'El puente está apagado: enciéndelo para guardar. Mientras tanto puedes descargar el archivo.' };
+  if (!info.online) return { ok: false, offline: true, error: 'Bridge is off: turn it on to save. Meanwhile you can download the file.' };
   try {
     const { status, body } = await bridgeFetch('/config', { method: 'POST', timeout: 15_000, body: text });
     if (status === 404) return { ok: false, oldBridge: true, error: OLD_BRIDGE_CONFIG };
-    if (!body?.ok) return { ok: false, invalid: status === 400, error: body?.error ?? 'El puente no pudo guardar el archivo.' };
+    if (!body?.ok) return { ok: false, invalid: status === 400, error: body?.error ?? 'The bridge could not save the file.' };
     lastDiscovery = 0;
     await discoverServers(true).catch(() => {});
     scheduleBroadcast();
     return { ok: true, ...body };
-  } catch { return { ok: false, error: 'No se pudo contactar con el puente.' }; }
+  } catch { return { ok: false, error: 'Could not reach the bridge.' }; }
 }
 
 async function openConfig() {
   const info = await probeBridge(true);
   if (!info.online) {
-    return { ok: false, offline: true, path: info.config, error: 'El puente no está encendido, así que no puedo abrir el archivo por ti.' };
+    return { ok: false, offline: true, path: info.config, error: 'Bridge is not running, so I cannot open the file for you.' };
   }
   try {
     const { status, body } = await bridgeFetch('/open-config', { method: 'POST', timeout: 4000 });
     if (status === 404) return { ok: false, path: info.config, error: OLD_BRIDGE };
-    if (status !== 200 || !body?.ok) return { ok: false, path: info.config, error: body?.error ?? 'No se pudo abrir el archivo.' };
+    if (status !== 200 || !body?.ok) return { ok: false, path: info.config, error: body?.error ?? 'Could not open the file.' };
     return { ok: true, path: body.path ?? info.config };
   } catch {
     return { ok: false, path: info.config, error: 'No se pudo contactar con el puente.' };
@@ -676,8 +676,8 @@ async function runNoticesCheck(force) {
   try {
     feed = await fetchNoticesFeed();
   } catch (err) {
-    const reason = err?.name === 'AbortError' ? 'sin respuesta' : err instanceof SyntaxError ? 'el archivo no es un JSON válido' : (err?.message ?? 'error');
-    return failNotices(`No se pudieron consultar los avisos (${reason}).`);
+    const reason = err?.name === 'AbortError' ? 'no response' : err instanceof SyntaxError ? 'file is not valid JSON' : (err?.message ?? 'error');
+    return failNotices(`Could not check notices (${reason}).`);
   }
   const parsed = normalizeFeed(feed, { version: localVersion() });
   if (!parsed.ok) return failNotices(parsed.error);

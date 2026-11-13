@@ -89,9 +89,9 @@
      */
     async injectSystemPrompt(activeToolsList) {
       const composer = await WMB.waitFor(() => this.getComposer(), { timeout: 4000 });
-      if (!composer) return { ok: false, error: 'No se encontró el cuadro de texto del chat.' };
+      if (!composer) return { ok: false, error: 'Chat input box not found.' };
       const ok = await WMB.dom.setText(composer, WMB.buildSystemPrompt(activeToolsList), { append: true });
-      return ok ? { ok: true } : { ok: false, error: 'No se pudo escribir en el cuadro de texto.' };
+      return ok ? { ok: true } : { ok: false, error: 'Could not write to the chat input box.' };
     }
 
     /**
@@ -302,7 +302,7 @@
      */
     async sendToolResult(text, { autoSend = true, settleMs = 0 } = {}) {
       const composer = await WMB.waitFor(() => this.getComposer(), { timeout: 5000 });
-      if (!composer) return { ok: false, error: 'No se encontró el cuadro de texto del chat.' };
+      if (!composer) return { ok: false, error: 'Chat input box not found.' };
       this.lastActivity = Date.now();
       this.deliveries += 1;
       this.lastDeliveryAt = Date.now();
@@ -311,10 +311,10 @@
       this.#expectReply();
       // v1.7.0: NUNCA acumular. Si quedó un resultado/aviso viejo en el cuadro (un envío anterior que no salió), se quita ahora.
       try {
-        if (await WMB.dom.purgeStale(composer)) this.debug?.('err', 'Había un resultado viejo sin enviar en el cuadro de texto: lo quité para no repetirlo.');
+        if (await WMB.dom.purgeStale(composer)) this.debug?.('err', 'Found an unsent old result in the input box: removed it to avoid repeating.');
       } catch { /* si no se puede limpiar, se sigue como antes */ }
       if (!(await WMB.dom.setText(composer, text, { append: true }))) {
-        return { ok: false, error: 'No se pudo escribir en el cuadro de texto.' };
+        return { ok: false, error: 'Could not write to the chat input box.' };
       }
       if (!autoSend) return { ok: true };
       if (settleMs) await WMB.sleep(settleMs);
@@ -328,7 +328,7 @@
           await WMB.sleep(1200); // v1.7.1: margen para chats lentos; reenviar sin esperar duplicaba el mensaje (otro eco)
           const now = this.getComposer();
           if (!now || (marker && !this.#norm(WMB.dom.getText(now)).includes(marker))) { sent = true; break; }
-          this.debug?.('err', `Envío ${n}/3: el chat no aceptó el mensaje; pruebo otro método…`);
+          this.debug?.('err', `Send ${n}/3: chat did not accept the message; trying another method…`);
         }
         const token = n === 3 && this.options.focusFallback && WMB.isBackground() ? await WMB.bg({ type: 'FOCUS_TAB' }) : null;
         if (token) await WMB.sleep(800);
@@ -336,7 +336,7 @@
         if (token?.prev) WMB.bg({ type: 'RESTORE_FOCUS', prev: token.prev });
       }
       if (sent) this.awaitingSince = Date.now();
-      return sent ? { ok: true } : { ok: false, error: 'No se pudo enviar al chat tras 3 intentos automáticos.' };
+      return sent ? { ok: true } : { ok: false, error: 'Could not send to chat after 3 automatic attempts.' };
     }
 
     /**

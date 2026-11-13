@@ -44,7 +44,7 @@
     try {
       return await chrome.runtime.sendMessage(message);
     } catch (err) {
-      return { ok: false, error: /context invalidated/i.test(err.message) ? 'La extensión se actualizó: recarga la pestaña.' : err.message };
+      return { ok: false, error: /context invalidated/i.test(err.message) ? 'Extension updated: reload this tab.' : err.message };
     }
   }
 
@@ -57,13 +57,13 @@
     },
     /** v1.7.0 · Botón GLOBAL: 'start' | 'stop' | 'restart' actúan sobre el PROCESO del puente (no solo sobre el interruptor). */
     onBridgeAction: async (action) => {
-      const labels = { start: 'Encendiendo', stop: 'Apagando', restart: 'Reiniciando' };
+      const labels = { start: 'Starting', stop: 'Stopping', restart: 'Restarting' };
       widget.update({ bridgeBusy: action });
-      widget.log('ok', `${labels[action] ?? 'Procesando'} el puente…`);
+      widget.log('ok', `${labels[action] ?? 'Processing'} bridge…`);
       const res = await send({ type: 'BRIDGE_GLOBAL', action });
       widget.update({ bridgeBusy: null });
-      if (res?.ok) widget.log('ok', { start: 'Puente encendido.', stop: 'Puente apagado.', restart: 'Puente reiniciado.' }[action] ?? 'Hecho.');
-      else widget.log('err', res?.error ?? 'No se pudo completar la acción.');
+      if (res?.ok) widget.log('ok', { start: 'Bridge started.', stop: 'Bridge stopped.', restart: 'Bridge restarted.' }[action] ?? 'Done.');
+      else widget.log('err', res?.error ?? 'Action failed.');
       await refresh();
     },
     /** v1.7.0 · Tiempo de respuesta configurable (ms) antes de entregar cada resultado a la IA. */
@@ -72,7 +72,7 @@
       await refresh();
     },
     /** v1.7.0 · Vuelve a analizar el último mensaje de la IA (pestaña lenta que no tomó la respuesta). */
-    onRescan: () => { adapter.forceRescan(); widget.log('ok', 'Reescaneando la última respuesta de la IA…'); },
+    onRescan: () => { adapter.forceRescan(); widget.log('ok', 'Rescanning latest AI response…'); },
     /** `id` = un MCP; `null` = todos los MCP a la vez. */
     onSetPermission: async (id, permission) => {
       await send(id ? { type: 'SET_PERMISSION', id, permission } : { type: 'SET_ALL_PERMISSIONS', permission });
@@ -111,7 +111,7 @@
       responseDelayMs: state.settings.responseDelayMs ?? 1500,
       injection: injectionStatus(),
     });
-    if (announce) widget.log('ok', `Actualizado: ${state.tools.length} herramientas activas.`);
+    if (announce) widget.log('ok', `Updated: ${state.tools.length} active tools.`);
   }
 
   const resetTurns = () => sessionStorage.setItem(TURNS_KEY, '0');
@@ -119,11 +119,11 @@
   async function injectInstructions() {
     await refresh();
     if (!state.settings.bridgeEnabled) {
-      widget.log('err', 'El bridge está desactivado. Actívalo primero.');
+      widget.log('err', 'Bridge is disabled. Enable it first.');
       return;
     }
     if (!state.tools.length) {
-      widget.log('err', 'No hay herramientas: añade un MCP en el popup, comprueba que esté conectado y que no esté bloqueado.');
+      widget.log('err', 'No tools available: add an MCP in the popup, make sure it is connected and not blocked.');
       return;
     }
     const result = await adapter.injectSystemPrompt(state.tools);
@@ -132,7 +132,7 @@
       resetTurns();
       state.forceFull = false;
       widget.update({ injection: 'ok' });
-      widget.log('ok', 'Instrucciones escritas en el chat. Añade tu petición y envía.');
+      widget.log('ok', 'Instructions written to chat. Add your request and send.');
     } else {
       widget.log('err', result.error);
     }
@@ -152,7 +152,7 @@
     const gap = Math.max(0, MIN_GAP_MS - (Date.now() - lastDeliveredAt));
     const wait = Math.max(wanted, gap);
     if (wait < 400) return;
-    if (wanted >= 800) widget.log('ok', `Espero ${(wait / 1000).toFixed(1)} s antes de responder (se ajusta en el panel).`);
+    if (wanted >= 800) widget.log('ok', `Waiting ${(wait / 1000).toFixed(1)} s before replying (adjustable in panel).`);
     await WMB.sleep(wait);
   }
 
@@ -163,20 +163,20 @@
 
     let attached = true;
     if (plan.files.length) {
-      widget.log('ok', `Adjuntando ${plan.files.length} archivo(s) al chat…`);
+      widget.log('ok', `Attaching ${plan.files.length} file(s) to chat…`);
       attached = await adapter.attachFiles(plan.files);
       if (!attached) {
         for (const file of plan.files.filter((f) => !f.overflow)) {
           try { WMB.dom.download(WMB.dom.fileFrom(file)); } catch { /* noop */ }
         }
-        widget.log('err', 'No se pudo adjuntar al chat: se descargó el archivo (arrástralo al chat).');
+        widget.log('err', 'Could not attach to chat: file downloaded (drag it into the chat).');
       }
     }
     const tail = reminder !== false && state.tools.length ? `\n${WMB.reminderLine(state.tools, 'result')}` : '';
     const message = `${plan.build(attached)}${note ? `\n${note}` : ''}${tail}`;
     const sent = await adapter.sendToolResult(message, { autoSend, settleMs: attached && plan.files.length ? 1500 : 0 });
     lastDeliveredAt = Date.now();
-    widget.log(sent.ok ? 'ok' : 'err', sent.ok ? `Resultado enviado a ${adapter.name}.` : sent.error);
+    widget.log(sent.ok ? 'ok' : 'err', sent.ok ? `Result sent to ${adapter.name}.` : sent.error);
     return { ok: sent.ok, message };
   }
 
@@ -213,12 +213,12 @@
     const { call } = detected;
     if (!state.settings.bridgeEnabled) return; // bridge apagado: se ignoran las llamadas
     const obsolete = () => detected.seq !== undefined && detected.seq !== callSeq;
-    if (obsolete()) { widget.log('err', `Llamada obsoleta descartada (${call.name}): ya hay algo mas nuevo en el chat.`); return; }
+    if (obsolete()) { widget.log('err', `Obsolete call discarded (${call.name}): there is already something newer in the chat.`); return; }
     const { srv, tool } = await resolveCall(call);
 
     // Llamada que no corresponde a ningún MCP activo (p. ej. la IA explicando el formato): se ignora.
     if (!srv) {
-      widget.log('err', `Llamada ignorada: servidor «${call.server ?? '?'}» no activo.`);
+      widget.log('err', `Call ignored: server "${call.server ?? '?'}" is not active.`);
       return;
     }
 
@@ -226,21 +226,21 @@
     const prev = recentCalls.get(repeatKey);
     const repeats = prev && Date.now() - prev.at < REPEAT_WINDOW_MS ? prev.count : 0;
     if (repeats >= MAX_REPEATS && prev.result && tool && srv.permission !== 'deny') {
-      const cached = { ...prev.result, note: `[WMB] Llamada IDENTICA repetida ${repeats + 1} veces seguidas: no se ejecuto otra vez. Este es el resultado de la ultima ejecucion; usalo. Si no te sirve, cambia los argumentos o pidele otra cosa al usuario.` };
-      widget.log('err', `Llamada identica repetida ${repeats + 1} veces: reenvio el ultimo resultado sin ejecutar.`);
+      const cached = { ...prev.result, note: `[WMB] IDENTICAL call repeated ${repeats + 1} times in a row: not executed again. This is the result of the last execution; use it. If it does not work, change the arguments or ask the user for something else.` };
+      widget.log('err', `Identical call repeated ${repeats + 1} times: resending last result without executing.`);
       prev.count += 1;
       prev.at = Date.now();
-      await guarded(deliver(srv, call, cached), DELIVER_TIMEOUT_MS, 'El chat no acepto el resultado a tiempo.');
+      await guarded(deliver(srv, call, cached), DELIVER_TIMEOUT_MS, 'Chat did not accept the result in time.');
       return;
     }
 
     let result;
     if (srv.permission === 'deny') {
-      result = { status: 'rejected', text: 'El usuario no permite usar este MCP.' };
-      widget.log('err', `Bloqueada: ${srv.slug} › ${call.name}`);
+      result = { status: 'rejected', text: 'The user does not allow using this MCP.' };
+      widget.log('err', `Blocked: ${srv.slug} › ${call.name}`);
     } else if (!tool) {
       const available = state.tools.filter((t) => t.server === srv.slug).map((t) => t.name).join(', ');
-      result = { status: 'error', text: `La herramienta «${call.name}» no existe en «${srv.slug}». Disponibles: ${available || 'ninguna'}.` };
+      result = { status: 'error', text: `Tool "${call.name}" does not exist in "${srv.slug}". Available: ${available || 'none'}.` };
     } else {
       let approved = true;
       if (srv.permission === 'ask') {
@@ -253,29 +253,29 @@
       } // 'allow': se ejecuta siempre, sin preguntar nunca
 
       if (!approved) {
-        result = { status: 'rejected', text: 'El usuario rechazó la ejecución de esta herramienta.' };
-        widget.log('err', `Rechazada: ${srv.slug} › ${call.name}`);
+        result = { status: 'rejected', text: 'The user rejected executing this tool.' };
+        widget.log('err', `Rejected: ${srv.slug} › ${call.name}`);
       } else {
-        widget.log('ok', `Ejecutando ${srv.slug} › ${call.name}…`);
+        widget.log('ok', `Executing ${srv.slug} › ${call.name}…`);
         let response;
         try {
-          response = await callWithRetry(srv, call, 'La herramienta tardó demasiado en responder.');
+          response = await callWithRetry(srv, call, 'The tool took too long to respond.');
         } catch (err) {
           response = { ok: false, error: err.message };
         }
-        if (!response?.ok) result = { status: 'error', text: response?.error ?? 'Error desconocido.' };
+        if (!response?.ok) result = { status: 'error', text: response?.error ?? 'Unknown error.' };
         else result = { status: response.result?.isError ? 'error' : 'ok', raw: response.result };
         widget.log(result.status === 'ok' ? 'ok' : 'err', `${call.name}: ${result.status}`);
       }
     }
     if (tool && srv.permission !== 'deny' && result.status !== 'rejected') {
       recentCalls.set(repeatKey, { count: repeats + 1, at: Date.now(), result });
-      if (repeats > 0) result.note = `[WMB] Esta llamada es identica a la anterior (ya van ${repeats + 1}). Se ejecuto de nuevo y este es el resultado ACTUAL; si ya tienes el dato, no la repitas.`;
+      if (repeats > 0) result.note = `[WMB] This call is identical to the previous one (already ${repeats + 1} times). It was executed again and this is the CURRENT result; if you already have the data, do not repeat it.`;
     }
-    if (detected.rerun) result.note = '[WMB] Reenvío automático: tu mensaje anterior con el resultado no llegó a procesarse. Este es el resultado ACTUAL de tu llamada; continúa desde aquí.';
-    if (detected.extra > 0) result.note = `[WMB] Solo se ejecuto la primera llamada; ${detected.extra} mas se ignoraron. Envia UNA llamada por mensaje y espera el resultado.`;
-    if (obsolete()) { widget.log('err', `Resultado de ${call.name} descartado: ya hay algo mas nuevo en el chat (no lo envio para no repetir).`); return; }
-    const delivered = await guarded(deliver(srv, call, result), DELIVER_TIMEOUT_MS, 'El chat no aceptó el resultado a tiempo.');
+    if (detected.rerun) result.note = '[WMB] Automatic resend: your previous message with the result was not processed. This is the CURRENT result of your call; continue from here.';
+    if (detected.extra > 0) result.note = `[WMB] Only the first call was executed; ${detected.extra} more were ignored. Send ONE call per message and wait for the result.`;
+    if (obsolete()) { widget.log('err', `Result for ${call.name} discarded: there is already something newer in the chat (not sending to avoid repeating).`); return; }
+    const delivered = await guarded(deliver(srv, call, result), DELIVER_TIMEOUT_MS, 'Chat did not accept the result in time.');
     await superviseDelivery({ detected, message: delivered.message, sentOk: delivered.ok });
   }
 
@@ -306,9 +306,9 @@
     for (let round = 1; round <= VERIFY_ROUNDS; round += 1) {
       if (sent) {
         if ((await waitForReaction(REACT_WAIT_MS, mine)) !== 'timeout') return;
-        widget.log('err', `La IA no reaccionó al resultado (verificación ${round}/${VERIFY_ROUNDS}): lo vuelvo a enviar.`);
+        widget.log('err', `AI did not react to the result (check ${round}/${VERIFY_ROUNDS}): resending.`);
       } else {
-        widget.log('err', `El resultado no salió al chat (verificación ${round}/${VERIFY_ROUNDS}): lo vuelvo a enviar.`);
+        widget.log('err', `Result did not appear in chat (check ${round}/${VERIFY_ROUNDS}): resending.`);
       }
       if (mine !== epoch) return;
       sent = (await adapter.sendToolResult(message, { autoSend: true, settleMs: 0 })).ok;
@@ -317,36 +317,36 @@
     if (mine !== epoch || !state.settings.bridgeEnabled) return;
     const reruns = detected.reruns ?? 0;
     if (reruns >= MAX_RERUNS) {
-      widget.log('err', 'Sigo sin respuesta de la IA tras reenviar y volver a ejecutar. Revisa el chat.');
+      widget.log('err', 'Still no response from AI after resending and re-running. Check the chat.');
       return;
     }
-    widget.log('err', `Sin reacción tras ${VERIFY_ROUNDS} verificaciones: ejecuto de nuevo el JSON que dejó la IA (${reruns + 1}/${MAX_RERUNS}).`);
+    widget.log('err', `No reaction after ${VERIFY_ROUNDS} checks: re-running the JSON left by the AI (${reruns + 1}/${MAX_RERUNS}).`);
     queue = queue.then(() => processCall({ ...detected, rerun: true, reruns: reruns + 1, extra: 0 }));
   }
   // ------------- Formato invalido y reconexion (v1.3.0) -------------
 
   let badStreak = 0;
   const MAX_BAD_STREAK = 3;
-  const CONN_ERR = /no est.{1,2} conectado|desconectado/i;
+  const CONN_ERR = /no est.{1,2} conectado|desconectado|not connected|disconnected/i;
 
   /** La IA envio un mcp_call ilegible: se le devuelve el motivo exacto para que lo corrija (maximo 3 avisos seguidos). */
   async function handleMalformed({ text }) {
     if (!state.settings.bridgeEnabled || !state.tools.length) return;
     badStreak += 1;
     if (badStreak > MAX_BAD_STREAK) {
-      widget.log('err', 'La IA repite un formato invalido: dejo de avisarle. Revisa el chat.');
+      widget.log('err', 'AI keeps repeating an invalid format: stopping warnings. Check the chat.');
       return;
     }
-    widget.log('err', `Bloque sin leer (${badStreak}/${MAX_BAD_STREAK}): compruebo que la IA ya termino antes de avisarle.`);
+    widget.log('err', `Unreadable block (${badStreak}/${MAX_BAD_STREAK}): checking if AI has finished before warning.`);
     await paceDelivery();
     // v1.7.1: tras la espera se vuelve a mirar el chat. Si la IA seguia escribiendo (o el bloque ya se lee), NO se le avisa.
     const again = adapter.getLastText();
     if (adapter.isStreaming() || again !== text || WMB.extractMcpCalls(again).length) {
       badStreak = Math.max(0, badStreak - 1);
-      widget.log('ok', 'La IA seguia escribiendo el bloque: no la interrumpo con un aviso.');
+      widget.log('ok', 'AI was still typing the block: not interrupting with a warning.');
       return;
     }
-    widget.log('err', 'El bloque sigue ilegible: aviso a la IA con el motivo.');
+    widget.log('err', 'Block still unreadable: notifying AI with the reason.');
     const sent = await adapter.sendToolResult(WMB.formatCallError(text), { autoSend: state.settings.autoSend });
     if (!sent.ok) widget.log('err', sent.error);
   }
@@ -367,7 +367,7 @@
     for (let attempt = 0; attempt < 3; attempt += 1) {
       response = await guarded(send({ type: 'CALL_TOOL', server: srv.slug, name: call.name, arguments: call.arguments }), TOOL_TIMEOUT_MS, timeoutMessage);
       if (response?.ok || !CONN_ERR.test(response?.error ?? '') || attempt === 2) break;
-      widget.log('err', `${srv.slug} desconectado: espero la reconexion y reintento (${attempt + 1}/2).`);
+      widget.log('err', `${srv.slug} disconnected: waiting for reconnection and retrying (${attempt + 1}/2).`);
       await send({ type: 'RECONNECT', id: srv.id });
       await waitConnected(srv, 40_000);
     }
@@ -428,13 +428,13 @@
           resetTurns();
           state.forceFull = false;
           widget.update({ injection: 'ok' });
-          widget.log('ok', present ? 'Instrucciones renovadas en tu mensaje.' : 'Instrucciones añadidas automáticamente a tu mensaje.');
+          widget.log('ok', present ? 'Instructions renewed in your message.' : 'Instructions automatically added to your message.');
         } else {
           sessionStorage.setItem(TURNS_KEY, String(turns));
         }
         await adapter.submit();
       } else {
-        widget.log('err', 'No se pudieron añadir las instrucciones; usa «Inyectar instrucciones».');
+        widget.log('err', 'Could not add instructions; use "Inject instructions".');
       }
     })().finally(() => { injecting = false; });
   }
@@ -479,7 +479,7 @@
         onDone: ({ text }) => {
           if (state.settings.bridgeEnabled && state.tools.length && text.length < 1500 && DENIAL.test(text)) {
             state.forceFull = true;
-            widget.log('err', 'La IA dice que no tiene acceso: renovaré las instrucciones en tu próximo mensaje.');
+            widget.log('err', 'AI says it has no access: I will renew instructions in your next message.');
           }
         },
       },

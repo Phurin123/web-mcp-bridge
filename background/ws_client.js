@@ -68,7 +68,7 @@ export class McpConnection {
     };
     ws.onmessage = (event) => this.#onMessage(event.data);
     ws.onerror = () => {
-      this.lastError = 'No se pudo conectar con el servidor MCP.';
+      this.lastError = 'Could not connect to the MCP server.';
     };
     ws.onclose = () => {
       if (this.#ws !== ws) return;
@@ -104,13 +104,13 @@ export class McpConnection {
   request(method, params = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
     return new Promise((resolve, reject) => {
       if (!this.#ws || this.#ws.readyState !== WebSocket.OPEN) {
-        reject(new Error('Servidor MCP desconectado.'));
+        reject(new Error('MCP server disconnected.'));
         return;
       }
       const id = this.#nextId++;
       const timer = setTimeout(() => {
         this.#pending.delete(id);
-        reject(new Error(`Tiempo de espera agotado en «${method}».`));
+        reject(new Error(`Timeout waiting for "${method}".`));
       }, timeoutMs);
       this.#pending.set(id, { resolve, reject, timer });
       this.#ws.send(JSON.stringify({ jsonrpc: '2.0', id, method, params }));
@@ -178,7 +178,7 @@ export class McpConnection {
       this.refreshTools().catch(() => {});
     } else if (msg.method && msg.id !== undefined) {
       const result = msg.method === 'ping' ? { result: {} }
-        : { error: { code: -32601, message: 'Método no soportado por Web MCP Bridge' } };
+        : { error: { code: -32601, message: 'Method not supported by Web MCP Bridge' } };
       this.#ws?.send(JSON.stringify({ jsonrpc: '2.0', id: msg.id, ...result }));
     }
   }
@@ -187,7 +187,7 @@ export class McpConnection {
     clearInterval(this.#keepaliveTimer);
     for (const { reject, timer } of this.#pending.values()) {
       clearTimeout(timer);
-      reject(new Error('Conexión cerrada.'));
+      reject(new Error('Connection closed.'));
     }
     this.#pending.clear();
     this.tools = [];

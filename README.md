@@ -1,48 +1,48 @@
-# Web MCP Bridge (English UI + 18+ AI Platforms)
+# Web MCP Bridge (English UI + 18 AI Platforms)
 
-> ต่อยอดจากโปรเจกต์โอเพ่นซอร์ส [AstraxOf/web-mcp-bridge](https://github.com/AstraxOf/web-mcp-bridge) (MIT License)  
-> ปรับแต่งเพิ่มเติม: **แปล UI เป็นภาษาอังกฤษ** + **เพิ่มการรองรับเว็บแชท AI ยอดนิยมกว่า 18 แพลตฟอร์ม** + **สคริปต์รันบน Desktop (`Web-MCP-Bridge.cmd`)**
+> Built on top of the open-source [AstraxOf/web-mcp-bridge](https://github.com/AstraxOf/web-mcp-bridge) (MIT License).  
+> Additions: **Full English UI & Prompts** + **Support for 18 AI web chat platforms** + **Foreground Desktop Launcher (`Web-MCP-Bridge.cmd`)**.
 
-เชื่อม **เว็บแชท AI ฟรี** (ไม่ต้องใช้ API Key) เข้ากับ **MCP Servers ในคอมพิวเตอร์ของคุณ** (เช่น [Desktop Commander](https://github.com/wonderwhy-er/DesktopCommanderMCP)) เพื่อให้อ่าน/เขียนไฟล์ และรันคำสั่งเทอร์มินัลได้จริง
+Connect **free web AI chats** (no API keys required) to **local MCP servers** on your computer (such as [Desktop Commander](https://github.com/wonderwhy-er/DesktopCommanderMCP)) so the AI can read/write files and run terminal commands.
 
 ---
 
-## 🌐 แพลตฟอร์มที่รองรับ (18 เว็บไซต์)
+## Supported Platforms (18 Websites)
 
-| กลุ่ม | แพลตฟอร์ม |
+| Category | Platforms |
 |---|---|
-| **ต้นฉบับ (Full Support)** | ChatGPT (`chatgpt.com`), Gemini (`gemini.google.com`), Claude (`claude.ai`), DeepSeek (`chat.deepseek.com`) |
-| **เอเชีย / โมเดลเปิด** | Qwen (`chat.qwen.ai`), Kimi (`kimi.com`, `kimi.moonshot.cn`), Z.ai / GLM (`chat.z.ai`) |
+| **Core (Full Support)** | ChatGPT (`chatgpt.com`), Gemini (`gemini.google.com`), Claude (`claude.ai`), DeepSeek (`chat.deepseek.com`) |
+| **Asia / Open Models** | Qwen (`chat.qwen.ai`), Kimi (`kimi.com`, `kimi.moonshot.cn`), Z.ai / GLM (`chat.z.ai`) |
 | **Copilot & Meta** | Microsoft Copilot (`copilot.microsoft.com`), GitHub Copilot (`github.com/copilot`), Meta AI (`meta.ai`) |
-| **ฟรี / รวมโมเดล** | Google AI Studio (`aistudio.google.com`), Grok (`grok.com`), Perplexity (`perplexity.ai`), Mistral Le Chat (`chat.mistral.ai`), OpenRouter (`openrouter.ai`), Poe (`poe.com`), HuggingChat (`huggingface.co/chat`), T3 Chat (`t3.chat`), NotebookLM (`notebooklm.google.com`) |
+| **Free / Multi-Model** | Google AI Studio (`aistudio.google.com`), Grok (`grok.com`), Perplexity (`perplexity.ai`), Mistral Le Chat (`chat.mistral.ai`), OpenRouter (`openrouter.ai`), Poe (`poe.com`), HuggingChat (`huggingface.co/chat`), T3 Chat (`t3.chat`), NotebookLM (`notebooklm.google.com`) |
 
 ---
 
-## ✅ สิ่งที่ต้องมีในเครื่อง
+## Prerequisites
 
-1. **Python 3.9+** (เลือก *Add Python to PATH* ตอนติดตั้ง)
-2. **Node.js 18+** (สำหรับรัน MCP Server เช่น `desktop-commander` หรือ `filesystem`)
-3. **เบราว์เซอร์ Chromium** (Brave, Google Chrome หรือ Microsoft Edge เวอร์ชัน 116+)
+1. **Python 3.9+** (check *Add Python to PATH* during setup)
+2. **Node.js 18+** (for Node-based MCP servers such as `desktop-commander` or `server-filesystem`)
+3. **Chromium Browser** (Brave, Google Chrome, or Microsoft Edge 116+)
 
 ---
 
-## 🚀 วิธีติดตั้งและตั้งค่า (ทำครั้งเดียว)
+## Installation (One-Time Setup)
 
-### 1. โคลนโปรเจกต์
+### 1. Clone the repository
 ```bash
 git clone https://github.com/Phurin123/web-mcp-bridge.git
 cd web-mcp-bridge
 ```
-*(เก็บไว้ในโฟลเดอร์ถาวร ห้ามย้ายหรือลบหลังโหลดเข้าเบราว์เซอร์)*
+*(Keep this folder in a permanent location — do not move or delete it after loading it into your browser.)*
 
-### 2. ติดตั้ง Python dependency และ MCP Server
+### 2. Install Python dependency & Desktop Commander
 ```bash
 pip install -r server/requirements.txt
 npm install -g @wonderwhy-er/desktop-commander
 ```
 
-### 3. สร้างไฟล์ตั้งค่า `server/servers.json`
-สร้างไฟล์ `server/servers.json` (อ้างอิงจาก `server/servers.example.json`) ตัวอย่างสำหรับ **Desktop Commander** (พอร์ต `8091` เพื่อเลี่ยงพอร์ต 8080–8082 ที่มักชนกับ Docker):
+### 3. Create `server/servers.json`
+Create `server/servers.json` (see `server/servers.example.json`). Example with **Desktop Commander** (port `8091` to avoid conflicts with Docker on `8080–8082`):
 
 ```json
 {
@@ -65,46 +65,42 @@ npm install -g @wonderwhy-er/desktop-commander
   ]
 }
 ```
-> **หมายเหตุ:** หาก `desktop-commander.cmd` ไม่ทำงานบนเครื่อง ให้ใช้ `"node", "C:/path/to/node_modules/@wonderwhy-er/desktop-commander/dist/index.js"` หรือ `"npx.cmd", "-y", "@wonderwhy-er/desktop-commander"` แทน (ใช้ `/` ใน path)
+> **Tip:** If `desktop-commander.cmd` is not resolved on your system, use `"node", "C:/path/to/node_modules/@wonderwhy-er/desktop-commander/dist/index.js"` or `"npx.cmd", "-y", "@wonderwhy-er/desktop-commander"` (always use `/` in paths).
 
-### 4. สร้างทางลัดรันบน Desktop
-คัดลอกไฟล์ `Web-MCP-Bridge.cmd` (หรือคลิกขวา → *Create shortcut*) ไปวางไว้ที่หน้า **Desktop**  
-*(หรือสร้างไฟล์ `.cmd` บน Desktop ให้เรียก `call "C:\path\to\web-mcp-bridge\Web-MCP-Bridge.cmd"`)*
+### 4. Desktop Launcher (`Web-MCP-Bridge.cmd`)
+Copy `Web-MCP-Bridge.cmd` (or create a shortcut to it) onto your **Desktop**.  
+- Double-click to start the bridge in a terminal window with live logs.
+- **Closing the terminal window stops the bridge immediately** (nothing stays running in the background).
 
-การทำงานของ `Web-MCP-Bridge.cmd`:
-- ดับเบิลคลิกเพื่อเปิด Bridge ในหน้าต่าง Terminal พร้อมแสดง Log แบบเรียลไทม์
-- **เมื่อปิดหน้าต่าง Terminal ตัว Bridge จะปิดตามทันที** (ไม่รันค้างในพื้นหลัง)
-
-### 5. โหลด Extension เข้าเบราว์เซอร์ (Brave / Chrome / Edge)
-1. เปิด `brave://extensions` (หรือ `chrome://extensions` / `edge://extensions`)
-2. เปิด **Developer mode** (มุมขวาบน)
-3. กด **Load unpacked** แล้วเลือกโฟลเดอร์ `web-mcp-bridge` (โฟลเดอร์ที่มีไฟล์ `manifest.json`)
-4. แนะนำปักหมุดไอคอน Extension (รูปสะพาน) ไว้ที่แถบเครื่องมือ
+### 5. Load the Extension in Brave / Chrome / Edge
+1. Open `brave://extensions` (or `chrome://extensions` / `edge://extensions`).
+2. Enable **Developer mode** (top right).
+3. Click **Load unpacked** and select the `web-mcp-bridge` folder (the one containing `manifest.json`).
+4. Pin the **Web MCP Bridge** icon to your browser toolbar.
 
 ---
 
-## 🎯 วิธีใช้งาน
+## Usage
 
-1. **เปิด Bridge:** ดับเบิลคลิก **`Web-MCP-Bridge.cmd`** เปิดหน้าต่างค้างไว้ระหว่างใช้งาน
-2. **เปิด MCP Server ใน Extension:**
-   - กดไอคอน **Web MCP Bridge** → แท็บ **Servers** → ตรวจสอบจุดเขียว (`Bridge connected`)
-   - เปิดสวิตช์ **`desktop-commander`** ให้ขึ้นสีเขียว
-3. **เลือกโหมดสิทธิ์ (Permission):**
-   - **`Ask every time` (แนะนำ):** ถามยืนยัน (`Allow` / `Deny`) ก่อนรันคำสั่งในคอมทุกครั้ง
-   - **`Allow always` (โหมด Auto-Agent):** AI เรียก tool → รันบนเครื่อง → ส่งผลกลับเข้าแชทอัตโนมัติต่อเนื่องจนจบงาน *(ใช้เฉพาะงานที่ไว้ใจ)*
-4. **คุยในเว็บแชท AI:** เปิดเว็บที่รองรับ (เช่น ChatGPT, Gemini, DeepSeek, Qwen) แล้วพิมพ์สั่งงานได้เลย เช่น:  
-   `ช่วยดูรายการไฟล์ใน Desktop ของฉันให้หน่อย`
+1. **Start the Bridge:** Double-click **`Web-MCP-Bridge.cmd`** and keep the terminal window open while using it.
+2. **Enable MCP Server:**
+   - Click the **Web MCP Bridge** icon → **Servers** tab → verify green dot (`Bridge connected`).
+   - Toggle **`desktop-commander`** ON.
+3. **Choose Permission Mode:**
+   - **`Ask every time` (Recommended):** Prompts you (`Allow` / `Deny`) before running any local tool.
+   - **`Allow always` (Auto-Agent Mode):** Automatically executes tools and submits results back to the AI until the task finishes *(use only for trusted tasks)*.
+4. **Chat:** Open any supported AI website and ask a question (e.g. `List the files on my Desktop`).
 
 ---
 
-## 🛠️ การตรวจสอบ/พัฒนาต่อ
+## Development & Checks
 
 ```bash
-npm run check   # ตรวจสอบ syntax ของไฟล์ JS และ manifest.json
-npm test        # รันชุดทดสอบทั้งหมด
+npm run check   # Validate all JS files and manifest.json
+npm test        # Run all unit tests
 ```
 
-## 📄 License & Credit
+## License & Credit
 
-- Original Project: [AstraxOf/web-mcp-bridge](https://github.com/AstraxOf/web-mcp-bridge) (MIT License)
+- Original project: [AstraxOf/web-mcp-bridge](https://github.com/AstraxOf/web-mcp-bridge) (MIT License)
 - License: [MIT](LICENSE)

@@ -1,30 +1,29 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bienvenido a Web MCP Bridge</title>
+  <title>Welcome to Web MCP Bridge</title>
   <link rel="stylesheet" href="welcome.css">
 </head>
 <body>
   <main>
     <header>
-      <h1>Bienvenido a Web MCP Bridge</h1>
-      <p class="lead">Conecta ChatGPT, Claude, Gemini y DeepSeek con tus herramientas locales (MCP). Solo tienes que seguir estos pasos; el asistente se actualiza solo a medida que avanzas.</p>
+      <h1>Welcome to Web MCP Bridge</h1>
+      <p class="lead">Connect ChatGPT, Claude, Gemini, DeepSeek, and more to your local MCP tools. Follow these steps; the wizard updates automatically as you go.</p>
     </header>
 
     <ol class="steps">
       <li id="step-launcher" class="step" data-state="current">
         <span class="badge">1</span>
         <div class="body">
-          <h2>Instala el lanzador <small id="launcher-status" class="status"></small></h2>
-          <p>El navegador no puede encender programas por s&iacute; solo. El lanzador es un peque&ntilde;o proceso que se instala <strong>una sola vez</strong>, arranca con Windows y permite encender, apagar y reiniciar el puente desde esta extensi&oacute;n.</p>
+          <h2>Start or install the launcher <small id="launcher-status" class="status"></small></h2>
+          <p>Browsers cannot launch local programs directly. You can start the bridge manually with <code>Web-MCP-Bridge.cmd</code>, or install the background launcher once via <code>server/install.cmd</code>.</p>
           <div id="launcher-help">
             <ol class="how">
-              <li>Abre la carpeta de la extensi&oacute;n y entra en <code>server</code>.</li>
-              <li>Haz doble clic en <code>install.cmd</code> y espera a que diga &laquo;Listo&raquo;.</li>
+              <li>Open the extension folder and run <code>Web-MCP-Bridge.cmd</code> (or <code>server/install.cmd</code> for background auto-start).</li>
             </ol>
-            <p class="muted">&iquest;Prefieres la terminal? <code id="cmd-text">python server/install_service.py</code> <button id="copy-cmd" type="button" class="link">Copiar</button></p>
+            <p class="muted">Prefer terminal? <code id="cmd-text">python server/install_service.py</code> <button id="copy-cmd" type="button" class="link">Copy</button></p>
           </div>
         </div>
       </li>
@@ -32,12 +31,12 @@
       <li id="step-bridge" class="step" data-state="pending">
         <span class="badge">2</span>
         <div class="body">
-          <h2>Enciende el puente <small id="bridge-status" class="status"></small></h2>
-          <p>El puente es el programa que publica tus servidores MCP. Puedes controlarlo desde aqu&iacute; o desde el icono de la extensi&oacute;n.</p>
+          <h2>Start the bridge <small id="bridge-status" class="status"></small></h2>
+          <p>The bridge publishes your local MCP servers. You can control it here or from the extension popup.</p>
           <div class="actions">
-            <button id="btn-start" type="button">Iniciar</button>
-            <button id="btn-restart" type="button" class="soft">Reiniciar</button>
-            <button id="btn-stop" type="button" class="soft">Apagar</button>
+            <button id="btn-start" type="button">Start</button>
+            <button id="btn-restart" type="button" class="soft">Restart</button>
+            <button id="btn-stop" type="button" class="soft">Stop</button>
           </div>
           <p id="bridge-msg" class="msg" hidden></p>
         </div>
@@ -46,18 +45,18 @@
       <li id="step-servers" class="step" data-state="pending">
         <span class="badge">3</span>
         <div class="body">
-          <h2>Tus servidores MCP <small id="servers-status" class="status"></small></h2>
-          <p>Se detectan solos a partir de <code>server/servers.json</code>. Act&iacute;valos (m&aacute;ximo 5) y elige sus permisos desde el icono de la extensi&oacute;n.</p>
+          <h2>Your MCP servers <small id="servers-status" class="status"></small></h2>
+          <p>Discovered automatically from <code>server/servers.json</code>. Enable them (max 5) and choose permissions from the extension icon.</p>
           <ul id="server-list" class="servers"></ul>
-          <div class="actions"><button id="btn-config" type="button" class="soft">Editar servers.json</button></div>
+          <div class="actions"><button id="btn-config" type="button" class="soft">Edit servers.json</button></div>
         </div>
       </li>
 
       <li id="step-ready" class="step" data-state="pending">
         <span class="badge">4</span>
         <div class="body">
-          <h2>Pru&eacute;balo en tu chat favorito</h2>
-          <p>Abre uno de estos sitios con la extensi&oacute;n activa y pide algo que use tus herramientas.</p>
+          <h2>Try it in your favorite chat</h2>
+          <p>Open one of these sites with the extension enabled and ask something that uses your tools.</p>
           <div class="actions">
             <a class="btn soft" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>
             <a class="btn soft" href="https://claude.ai/" target="_blank" rel="noopener">Claude</a>

@@ -370,7 +370,7 @@
 
         this.logs.length
           ? h('ul', { class: 'log' }, this.logs.map((l) => h('li', { class: l.kind },
-            `${l.ts.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} · ${l.text}`)))
+            `${l.ts.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} · ${l.text}`)))
           : null,
 
         h('div', { class: 'foot' }, h('div', {}, `Web MCP Bridge v${WMB.VERSION}`), h('div', {}, 'Github: @AstraxOf')));
