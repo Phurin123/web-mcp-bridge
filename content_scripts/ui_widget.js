@@ -20,7 +20,7 @@
     return el;
   };
 
-  const PERMS = [['allow', 'Permitir siempre'], ['ask', 'Preguntar siempre'], ['deny', 'No permitir']];
+  const PERMS = [['allow', 'Allow always'], ['ask', 'Ask every time'], ['deny', "Don't allow"]];
 
   const CSS = `
     :host { all: initial; }
@@ -262,9 +262,9 @@
       const { servers, toolCount } = this.model;
       const pending = this.approvals.length;
       const bridgeDown = Boolean(this.model.bridge?.checked && !this.model.bridge.online);
-      const activeLabel = !this.model.bridgeEnabled ? 'Bridge desactivado' : bridgeDown ? 'Puente apagado' : servers.length
-        ? `${servers.length} MCP · ${toolCount} herramientas`
-        : 'Sin MCP activos';
+      const activeLabel = !this.model.bridgeEnabled ? 'Bridge disabled' : bridgeDown ? 'Bridge offline' : servers.length
+        ? `${servers.length} MCP · ${toolCount} tools`
+        : 'No active MCPs';
       const allUp = servers.length > 0 && servers.every((s) => s.status === 'connected');
 
       const pill = h('button', {
@@ -273,7 +273,7 @@
         onclick: () => { if (this._suppressClickUntil && Date.now() < this._suppressClickUntil) return; this.open = !this.open; this.render(); },
       },
       h('i', { class: `dot ${pending ? 'warn' : allUp && this.model.bridgeEnabled ? 'ok' : ''}` }),
-      h('span', {}, pending ? `${pending} llamada${pending > 1 ? 's' : ''} por aprobar` : activeLabel));
+      h('span', {}, pending ? `${pending} call${pending > 1 ? 's' : ''} awaiting approval` : activeLabel));
 
       const logScroll = this.root.querySelector('ul.log')?.scrollTop ?? 0; // conservar la posicion del historial entre refrescos
       this.root.replaceChildren(...(this.open ? [this.#panel()] : []), pill);
@@ -317,26 +317,26 @@
       const checked = Boolean(bridge?.checked);
       const online = Boolean(bridge?.online);
       const busy = Boolean(bridgeBusy);
-      const stateText = !checked ? 'comprobando…' : online ? `encendido${bridge.pid ? ` (pid ${bridge.pid})` : ''}` : 'apagado';
+      const stateText = !checked ? 'checking…' : online ? `running${bridge.pid ? ` (pid ${bridge.pid})` : ''}` : 'stopped';
       const act = (action) => () => { if (!busy) this.handlers.onBridgeAction?.(action); };
       return h('div', { class: 'bridge' },
         h('div', { class: 'perm', style: 'margin-top:0' },
-          h('strong', {}, 'Puente'),
+          h('strong', {}, 'Bridge'),
           h('span', { class: 'muted state' }, h('i', { class: `dot ${online ? 'ok' : ''}` }), stateText)),
         h('div', { class: 'row' },
           online
-            ? h('button', { class: 'danger', disabled: busy ? '' : false, onclick: act('stop') }, bridgeBusy === 'stop' ? 'Apagando…' : 'Apagar')
-            : h('button', { class: 'primary', disabled: busy ? '' : false, onclick: act('start') }, bridgeBusy === 'start' ? 'Encendiendo…' : 'Encender'),
-          h('button', { disabled: busy ? '' : false, onclick: act('restart') }, bridgeBusy === 'restart' ? 'Reiniciando…' : (online ? 'Reiniciar' : 'Reiniciar / encender'))),
-        h('div', { class: 'perm' }, h('strong', {}, 'Tiempo de respuesta'), this.#delaySelect()));
+            ? h('button', { class: 'danger', disabled: busy ? '' : false, onclick: act('stop') }, bridgeBusy === 'stop' ? 'Stopping…' : 'Stop')
+            : h('button', { class: 'primary', disabled: busy ? '' : false, onclick: act('start') }, bridgeBusy === 'start' ? 'Starting…' : 'Start'),
+          h('button', { disabled: busy ? '' : false, onclick: act('restart') }, bridgeBusy === 'restart' ? 'Restarting…' : (online ? 'Restart' : 'Restart / start'))),
+        h('div', { class: 'perm' }, h('strong', {}, 'Response delay'), this.#delaySelect()));
     }
 
     #panel() {
       const { servers, injection, adapterName, bridgeEnabled } = this.model;
       const injectionText = {
-        none: 'Las instrucciones se añadirán solas al enviar tu próximo mensaje.',
-        ok: 'Instrucciones inyectadas y al día.',
-        stale: 'Los MCP activos cambiaron: vuelve a inyectar las instrucciones.',
+        none: 'Instructions will be added automatically when you send your next message.',
+        ok: 'Instructions injected and up to date.',
+        stale: 'Active MCPs changed: re-inject instructions.',
       }[injection];
       const perms = new Set(servers.map((s) => s.permission));
       const common = perms.size === 1 ? [...perms][0] : 'mixed';
@@ -344,29 +344,29 @@
       return h('div', { class: `panel${this.approvals.length ? ' has-approval' : ''}`, role: 'dialog', 'aria-label': 'Web MCP Bridge' },
         h('div', { class: 'head', 'data-drag': '1', style: 'cursor: move;' },
           h('strong', {}, `Web MCP Bridge · ${adapterName}`),
-          h('button', { 'aria-label': 'Cerrar', onclick: () => { this.open = false; this.render(true); } }, '✕')),
+          h('button', { 'aria-label': 'Close', onclick: () => { this.open = false; this.render(true); } }, '✕')),
 
         this.#approvalSection(),
 
         servers.length
           ? h('ul', {}, servers.map((s) => h('li', { class: 'srv' },
             h('i', { class: `dot ${s.status === 'connected' ? 'ok' : s.status === 'connecting' ? 'warn' : ''}` }),
-            h('span', { class: 'grow' }, s.name, h('span', { class: 'muted' }, s.permission === 'deny' ? ' · bloqueado' : s.status === 'connected' ? ` · ${s.toolCount} herr.` : ' · sin conexión')),
-            this.#permSelect(s.permission, (value) => this.handlers.onSetPermission(s.id, value), `Permiso de ${s.name}`))))
-          : h('p', { class: 'muted' }, 'Abre el icono de la extensión y activa un servidor MCP.'),
+            h('span', { class: 'grow' }, s.name, h('span', { class: 'muted' }, s.permission === 'deny' ? ' · blocked' : s.status === 'connected' ? ` · ${s.toolCount} tools` : ' · disconnected')),
+            this.#permSelect(s.permission, (value) => this.handlers.onSetPermission(s.id, value), `Permission for ${s.name}`))))
+          : h('p', { class: 'muted' }, 'Open the extension icon and enable an MCP server.'),
 
         servers.length > 1
-          ? h('div', { class: 'perm' }, h('strong', {}, 'Todos los MCP'),
-            this.#permSelect(common, (value) => this.handlers.onSetPermission(null, value), 'Permiso de todos los MCP'))
+          ? h('div', { class: 'perm' }, h('strong', {}, 'All MCPs'),
+            this.#permSelect(common, (value) => this.handlers.onSetPermission(null, value), 'Permission for all MCPs'))
           : null,
 
         this.#bridgeSection(),
 
         h('p', { class: 'muted' }, injectionText),
         h('div', { class: 'row' },
-          h('button', { class: 'primary', onclick: () => this.handlers.onInject() }, 'Inyectar instrucciones'),
-          h('button', { onclick: () => this.handlers.onRefresh() }, 'Actualizar'),
-          h('button', { title: 'Vuelve a leer la última respuesta de la IA (si la pestaña iba lenta y no la tomó)', onclick: () => this.handlers.onRescan?.() }, 'Reescanear')),
+          h('button', { class: 'primary', onclick: () => this.handlers.onInject() }, 'Inject instructions'),
+          h('button', { onclick: () => this.handlers.onRefresh() }, 'Refresh'),
+          h('button', { title: 'Re-read the latest AI response', onclick: () => this.handlers.onRescan?.() }, 'Rescan')),
 
         this.logs.length
           ? h('ul', { class: 'log' }, this.logs.map((l) => h('li', { class: l.kind },
@@ -396,13 +396,13 @@
       let args = JSON.stringify(call.arguments ?? {}, null, 2);
       if (args.length > 1500) args = `${args.slice(0, 1500)}\n…`;
       return h('div', { class: 'card' },
-        h('strong', {}, 'La IA quiere ejecutar una herramienta'),
+        h('strong', {}, 'AI wants to run a tool'),
         h('div', {}, `${call.server} › ${call.name}`),
         h('pre', {}, args),
         h('div', { class: 'row' },
-          h('button', { class: 'primary', onclick: () => decide(true) }, 'Ejecutar'),
-          h('button', { onclick: () => decide('always') }, 'Permitir siempre'),
-          h('button', { class: 'danger', onclick: () => decide(false) }, 'Rechazar')));
+          h('button', { class: 'primary', onclick: () => decide(true) }, 'Allow'),
+          h('button', { onclick: () => decide('always') }, 'Allow always'),
+          h('button', { class: 'danger', onclick: () => decide(false) }, 'Deny')));
     }
   }
 
