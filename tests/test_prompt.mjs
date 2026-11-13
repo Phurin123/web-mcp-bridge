@@ -25,17 +25,17 @@ assert.match(prompt, /· a: Primer sumando/);
 assert.ok(!prompt.includes('$schema') && !prompt.includes('sumarArguments'), 'las herramientas van como firmas compactas, no como JSON Schema');
 assert.match(prompt, /"mcp_call"/);
 assert.ok(prompt.startsWith(`[WMB:${WMB.toolsSignature(tools)}]`), 'debe empezar con el marcador');
-assert.match(prompt, /SÍ tienes acceso/);
+assert.match(prompt, /You DO have access/);
 assert.ok(prompt.length < 1700, 'el prompt base debe ser compacto');
 assert.notEqual(WMB.toolsSignature(tools), WMB.toolsSignature([]));
-assert.match(WMB.buildSystemPrompt([]), /Ningún servidor MCP activo/);
+assert.match(WMB.buildSystemPrompt([]), /No MCP servers currently active/);
 
 // Recordatorio de una línea para que la IA no olvide sus herramientas
 const line = WMB.reminderLine([{ server: 'astrax_mcp' }, { server: 'astrax_mcp' }]);
 assert.ok(!line.includes('\n') && line.length < 260, 'una sola línea corta');
-assert.match(line, /Tienes herramientas MCP locales reales \(astrax_mcp: 2\)/);
+assert.match(line, /You have real local MCP tools \(astrax_mcp: 2\)/);
 assert.match(line, /mcp_call/);
-assert.match(WMB.reminderLine([{ server: 's' }], 'result'), /Continúa la tarea/);
+assert.match(WMB.reminderLine([{ server: 's' }], 'result'), /Continue the task/);
 assert.ok(!line.includes('[WMB:'), 'no debe confundirse con el marcador de instrucciones');
 
 console.log('✔ test_prompt: todo correcto');
