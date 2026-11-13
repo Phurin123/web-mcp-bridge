@@ -1,20 +1,36 @@
-# Web MCP Bridge (English UI + 18 AI Platforms)
+# Web MCP Bridge (English UI & Multi-AI Support)
 
 > Built on top of the open-source [AstraxOf/web-mcp-bridge](https://github.com/AstraxOf/web-mcp-bridge) (MIT License).  
-> Additions: **Full English UI & Prompts** + **Support for 18 AI web chat platforms** + **Foreground Desktop Launcher (`Web-MCP-Bridge.cmd`)**.
+> Additions: **Full English UI & Prompts** + **Multi-Platform AI Chat Support** + **Foreground Desktop Launcher (`Web-MCP-Bridge.cmd`)**.
 
 Connect **free web AI chats** (no API keys required) to **local MCP servers** on your computer (such as [Desktop Commander](https://github.com/wonderwhy-er/DesktopCommanderMCP)) so the AI can read/write files and run terminal commands.
 
 ---
 
-## Supported Platforms (18 Websites)
+## Supported AI Platforms
 
-| Category | Platforms |
-|---|---|
-| **Core (Full Support)** | ChatGPT (`chatgpt.com`), Gemini (`gemini.google.com`), Claude (`claude.ai`), DeepSeek (`chat.deepseek.com`) |
-| **Asia / Open Models** | Qwen (`chat.qwen.ai`), Kimi (`kimi.com`, `kimi.moonshot.cn`), Z.ai / GLM (`chat.z.ai`) |
-| **Copilot & Meta** | Microsoft Copilot (`copilot.microsoft.com`), GitHub Copilot (`github.com/copilot`), Meta AI (`meta.ai`) |
-| **Free / Multi-Model** | Google AI Studio (`aistudio.google.com`), Grok (`grok.com`), Perplexity (`perplexity.ai`), Mistral Le Chat (`chat.mistral.ai`), OpenRouter (`openrouter.ai`), Poe (`poe.com`), HuggingChat (`huggingface.co/chat`), T3 Chat (`t3.chat`), NotebookLM (`notebooklm.google.com`) |
+### Core (Dedicated Adapters)
+- **ChatGPT** (`chatgpt.com`, `chat.openai.com`)
+- **Gemini** (`gemini.google.com`)
+- **Claude** (`claude.ai`)
+- **DeepSeek** (`chat.deepseek.com`)
+
+### Additional Supported AI Chats
+- **Qwen** (`chat.qwen.ai`)
+- **Kimi** (`kimi.com`, `kimi.moonshot.cn`)
+- **Z.ai / GLM** (`chat.z.ai`)
+- **Microsoft Copilot** (`copilot.microsoft.com`)
+- **GitHub Copilot** (`github.com/copilot`)
+- **Meta AI** (`meta.ai`)
+- **Google AI Studio** (`aistudio.google.com`)
+- **Grok** (`grok.com`)
+- **Perplexity** (`perplexity.ai`)
+- **Mistral Le Chat** (`chat.mistral.ai`)
+- **OpenRouter** (`openrouter.ai`)
+- **Poe** (`poe.com`)
+- **HuggingChat** (`huggingface.co/chat`)
+- **T3 Chat** (`t3.chat`)
+- **NotebookLM** (`notebooklm.google.com`)
 
 ---
 
