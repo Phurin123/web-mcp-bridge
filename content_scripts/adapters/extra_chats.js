@@ -14,7 +14,7 @@
     {
       id: 'kimi',
       name: 'Kimi',
-      hosts: ['kimi.com', 'kimi.moonshot.cn'],
+      hosts: ['kimi.com', 'kimi.ai', 'kimi.moonshot.cn'],
       selectors: {
         composer: ['div[role="textbox"][contenteditable="true"]', 'div[contenteditable="true"]', 'textarea'],
         sendButton: ['button[aria-label*="Send" i]', 'button[type="submit"]', 'div[class*="send" i]', 'button[class*="send" i]'],

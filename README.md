@@ -17,7 +17,7 @@ Connect **free web AI chats** (no API keys required) to **local MCP servers** on
 
 ### Additional Supported AI Chats
 - **Qwen** (`chat.qwen.ai`)
-- **Kimi** (`kimi.com`, `kimi.moonshot.cn`)
+- **Kimi** (`kimi.com`, `kimi.ai`, `kimi.moonshot.cn`)
 - **Z.ai / GLM** (`chat.z.ai`)
 - **Microsoft Copilot** (`copilot.microsoft.com`)
 - **GitHub Copilot** (`github.com/copilot`)

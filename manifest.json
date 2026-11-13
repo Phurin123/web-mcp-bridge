@@ -24,6 +24,7 @@
     "https://claude.ai/*",
     "https://chat.deepseek.com/*",
     "https://*.kimi.com/*",
+    "https://*.kimi.ai/*",
     "https://kimi.moonshot.cn/*",
     "https://chat.z.ai/*",
     "https://chat.qwen.ai/*",
@@ -105,6 +106,7 @@
     {
       "matches": [
         "https://*.kimi.com/*",
+        "https://*.kimi.ai/*",
         "https://kimi.moonshot.cn/*",
         "https://chat.z.ai/*",
         "https://chat.qwen.ai/*",
